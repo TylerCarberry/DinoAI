@@ -17,6 +17,8 @@ function shouldJump(currentSpeed, obstacles) {
     const D = getParameterByName("D");
     const E = getParameterByName("E");
 
+    console.log("" + A + B + C + D + E);
+
     let foo = E * currentSpeed * closestX;
 
     console.log(foo)
@@ -451,6 +453,9 @@ function getParameterByName(name, url) {
             this.startListening();
             this.update();
 
+            this.tRex.startJump(this.currentSpeed);
+            this.playIntro();
+
             window.addEventListener(Runner.events.RESIZE,
                 this.debounceResize.bind(this));
         },
@@ -877,9 +882,14 @@ function getParameterByName(name, url) {
             //this.tRex.reset();
             //this.tRex.play();
 
-            this.restart();
-            this.tRex.reset();
-            this.play();
+            //alert(this.highestScore);
+
+            window.opener.callback(this.highestScore);
+            window.close();
+
+            //this.restart();
+            //this.tRex.reset();
+            //this.play();
         },
 
         stop: function () {
