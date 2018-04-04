@@ -11,11 +11,11 @@ function shouldJump(currentSpeed, obstacles) {
 
     console.log(closestX, closestY);
 
-    const A = getParameterByName("A");
-    const B = getParameterByName("B");
-    const C = getParameterByName("C");
-    const D = getParameterByName("D");
-    const E = getParameterByName("E");
+    const A = getParameterByName("a");
+    const B = getParameterByName("b");
+    const C = getParameterByName("c");
+    const D = getParameterByName("d");
+    const E = getParameterByName("e");
 
     console.log("" + A + B + C + D + E);
 
@@ -42,11 +42,11 @@ function shouldDuck(currentSpeed, obstacles) {
 
     console.log(closestX, closestY);
 
-    const A = getParameterByName("A");
-    const B = getParameterByName("B");
-    const C = getParameterByName("C");
-    const D = getParameterByName("D");
-    const E = getParameterByName("E");
+    const A = getParameterByName("a");
+    const B = getParameterByName("b");
+    const C = getParameterByName("c");
+    const D = getParameterByName("d");
+    const E = getParameterByName("e");
 
     if (closestY > A && closestY < B) {
         return true;
@@ -935,7 +935,7 @@ function getParameterByName(name, url) {
         onVisibilityChange: function (e) {
             if (document.hidden || document.webkitHidden || e.type == 'blur' ||
                 document.visibilityState != 'visible') {
-                this.stop();
+                //this.stop();
             } else if (!this.crashed) {
                 this.tRex.reset();
                 this.play();

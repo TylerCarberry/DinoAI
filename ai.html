@@ -28,11 +28,27 @@
 
 <script>
 
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    //var theWindow = window;
+
     var genetic = Genetic.create();
 
     genetic.optimize = Genetic.Optimize.Maximize;
     genetic.select1 = Genetic.Select1.Tournament2;
     genetic.select2 = Genetic.Select2.Tournament2;
+
+    var resultOfLastGame = -1;
+
+    function callback(val) {
+        //alert(val)
+        resultOfLastGame = val;
+
+
+        // TODO We might need to replace resultOfLastGame with an array or dict
+    }
 
     genetic.seed = function() {
 
@@ -62,6 +78,10 @@
 
     genetic.mutate = function(entity) {
 
+        //$http
+
+        //console.log("MUTATE: " + theWindow);
+
         function replaceAt(str, index, character) {
             return str.substr(0, index) + character + str.substr(index+character.length);
         }
@@ -80,6 +100,9 @@
     };
 
     genetic.crossover = function(mother, father) {
+
+
+        //console.log("CROSSOVER: " + theWindow);
 
         // two-point crossover
         var len = mother.length;
@@ -102,7 +125,32 @@
         return [son, daughter];
     };
 
-    genetic.fitness = function(entity) {
+    genetic.fitness = async function(entity) {
+
+        //genetic.window
+
+
+
+
+        //console.log(window);
+
+       // $("#results tbody").prepend("TYLER");
+
+
+       //$(document).open("main.html?a=0&b=40&c=3&d=150&e=0.13");
+
+        window.open("index.html?a=0&b=40&c=3&d=150&e=0.13");
+
+        console.log(resultOfLastGame)
+
+        while(resultOfLastGame < 0) {
+            await sleep(2000);
+        }
+
+        return resultOfLastGame;
+
+
+
         ///////////////////////////////////////////////////////////////////////
         // Cole Added
         // TODO: This is where we need to add the code to open the game with the params, get the score, and close the game.
@@ -110,6 +158,12 @@
         return Math.floor(Math.random() * 10000);
         //////////////////////////////////////////////////////////////////////
         var fitness = 0;
+
+        console.log("HI");
+
+        alert("HI");
+
+        //window.open("main.html?a=0&b=40&c=3&d=150&e=0.13");
 
         var i;
         for (i=0;i<entity.length;++i) {
@@ -181,7 +235,7 @@
 
             var config = {
                 "iterations": 4000
-                , "size": 250
+                , "size": 10
                 , "crossover": 0.3
                 , "mutation": 0.3
                 , "skip": 20
