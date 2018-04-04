@@ -125,6 +125,8 @@
         return [son, daughter];
     };
 
+    var count = 0;
+
     genetic.fitness = async function(entity) {
 
         //genetic.window
@@ -137,9 +139,12 @@
        // $("#results tbody").prepend("TYLER");
 
 
+        await sleep(300*count++);
+
+
        //$(document).open("main.html?a=0&b=40&c=3&d=150&e=0.13");
 
-        window.open("index.html?a=0&b=40&c=3&d=150&e=0.13");
+        window.open("index.html?a=0&b=40&c=3&d=150&e=0.13", "DINO"+count++, "height=300,width=900");
 
         console.log(resultOfLastGame)
 
@@ -234,11 +239,11 @@
             $("#results tbody").html("");
 
             var config = {
-                "iterations": 4000
-                , "size": 10
+                "iterations": 400
+                , "size": 8
                 , "crossover": 0.3
                 , "mutation": 0.3
-                , "skip": 20
+                , "skip": 2
             };
 
             var userData = {

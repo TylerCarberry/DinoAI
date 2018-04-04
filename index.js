@@ -53,6 +53,9 @@ function shouldDuck(currentSpeed, obstacles) {
     }
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 function getParameterByName(name, url) {
@@ -935,7 +938,7 @@ function getParameterByName(name, url) {
         onVisibilityChange: function (e) {
             if (document.hidden || document.webkitHidden || e.type == 'blur' ||
                 document.visibilityState != 'visible') {
-                this.stop();
+                //this.stop();
             } else if (!this.crashed) {
                 this.tRex.reset();
                 this.play();
