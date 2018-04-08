@@ -1,32 +1,54 @@
 // Copyright (c) 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+function inBox(center_x, center_y, width, height, obstacles) {
+    let half_height = Number(height) / 2.0;
+    let half_width = Number(width) / 2.0;
+    console.log(half_width)
+    for(let i = 0; i < obstacles.length; i++) {
+        if(obstacles[i] == null) {
+            return false;
+        }
+        let x = obstacles[i].xPos;
+        let y = obstacles[i].yPos;
+        if(x < (Number(center_x)+half_width).toString() &&
+           x > (Number(center_x)-half_width).toString() &&
+           y < (Number(center_y)+half_height).toString() &&
+           y > (Number(center_y)-half_height).toString()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function shouldJump(currentSpeed, obstacles) {
     if (obstacles == null || obstacles[0] == null) {
         return false;
     }
 
-    closestX = obstacles[0].xPos;
-    closestY = obstacles[0].yPos;
+    var closestX = obstacles[0].xPos;
+    var closestY = obstacles[0].yPos;
 
     console.log(closestX, closestY);
 
-    const A = getParameterByName("a");
-    const B = getParameterByName("b");
-    const C = getParameterByName("c");
-    const D = getParameterByName("d");
-    const E = getParameterByName("e");
+    let center_x = getParameterByName("x");
+    let center_y = getParameterByName("y");
+    let width = getParameterByName("w");
+    let height = getParameterByName("h");
+    let speed_adjust = getParameterByName("v");
+    console.log("center x: " + typeof center_x);
+    center_x = ((Number(speed_adjust) * Number(currentSpeed)) + Number(center_x)).toString();
+    console.log("center x: " + typeof center_x);
+    //console.log("" + A + B + C + D + E);
 
-    console.log("" + A + B + C + D + E);
+    //let foo = E * currentSpeed * closestX;
 
-    let foo = E * currentSpeed * closestX;
-
-    console.log(foo)
+    //console.log(foo)
 
     ////////////*********************
     // http://localhost:63342/DinoAI/index.html?_ijt=ellenqd8nn1u3udmt162comjm2?A=0&B=60&C=3&D=150&E=0.13
 
-    return foo > C && foo < D;
+    return inBox(center_x, center_y, width, height, obstacles);
 
     //return Math.random() < 0.05;
 }
@@ -37,20 +59,30 @@ function shouldDuck(currentSpeed, obstacles) {
         return false;
     }
 
-    closestX = obstacles[0].xPos;
-    closestY = obstacles[0].yPos;
+    // closestX = obstacles[0].xPos;
+    // closestY = obstacles[0].yPos;
+    //
+    // console.log(closestX, closestY);
+    //
+    // const A = getParameterByName("a");
+    // const B = getParameterByName("b");
+    // const C = getParameterByName("c");
+    // const D = getParameterByName("d");
+    // const E = getParameterByName("e");
+    //
+    // if (closestY > A && closestY < B) {
+    //     return true;
+    // }
 
-    console.log(closestX, closestY);
+    let center_x = getParameterByName("upper_x");
+    let center_y = getParameterByName("upper_y");
+    let width = getParameterByName("upper_w");
+    let height = getParameterByName("upper_h");
+    let speed_adjust = getParameterByName("upper_v");
 
-    const A = getParameterByName("a");
-    const B = getParameterByName("b");
-    const C = getParameterByName("c");
-    const D = getParameterByName("d");
-    const E = getParameterByName("e");
+    center_x = ((Number(speed_adjust) * Number(currentSpeed)) + Number(center_x)).toString();
 
-    if (closestY > A && closestY < B) {
-        return true;
-    }
+    return inBox(center_x, center_y, width, height, obstacles);
 }
 
 function sleep(ms) {
@@ -604,11 +636,11 @@ function getParameterByName(name, url) {
 
                 if (!this.tRex.jumping) {
 
-                    if (shouldDuck(this.currentSpeed, this.horizon.obstacles)) {
-                        this.tRex.setDuck(true);
-                    }
+                    // if (shouldDuck(this.currentSpeed, this.horizon.obstacles)) {
+                    //     this.tRex.setDuck(true);
+                    // }
 
-                    else if (shouldJump(this.currentSpeed, this.horizon.obstacles)) {
+                    /*else*/ if (shouldJump(this.currentSpeed, this.horizon.obstacles)) {
                         this.tRex.setDuck(false);
                         this.tRex.startJump(this.currentSpeed);
                     }
@@ -887,8 +919,12 @@ function getParameterByName(name, url) {
 
             //alert(this.highestScore);
 
-            window.opener.callback(this.highestScore);
-            window.close();
+            // var params = "a=" + getParameterByName("a").toString() + "&b=" + getParameterByName("b") +
+            //     "&c=" + getParameterByName("c") + "&d=" + getParameterByName("d") + "&e=" + getParameterByName("e");
+            //window.opener.callback(this.highestScore, params);
+            document.getElementById("game-over").innerHTML = "game over";
+            document.getElementById("score").innerHTML = this.highestScore.toString();
+            //window.close();
 
             //this.restart();
             //this.tRex.reset();
