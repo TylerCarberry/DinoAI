@@ -12,10 +12,17 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static ai.Utils.*;
+import static ai.Utils.randomDoubleInRange;
+
 public class Evolution {
 
     private Random random = new Random();
     private ExecutorService exec;
+
+    private double mutateProb;
+    private Configuration mins;
+    private Configuration maxes;
 
     public Evolution(int numThreads) {
         Logger logger = Logger.getLogger("");
@@ -24,8 +31,13 @@ public class Evolution {
         exec = Executors.newFixedThreadPool(numThreads);
     }
 
-    public void start(double[] growthSpeed, double mutateProb, Configuration maxes, Configuration mins, int size,
+    public void start(double mutateProb, Configuration maxes, Configuration mins, int size,
                       int iterations, int stopScore, double crossoverProb) {
+
+        this.mutateProb = mutateProb;
+        this.mins = mins;
+        this.maxes = maxes;
+
         double[][] entities = new double[size][];
 
         for (int i = 0; i < size; i++) {
@@ -61,14 +73,20 @@ public class Evolution {
 
             while (numNewPop < size) {
                 if (random.nextDouble() < crossoverProb && numNewPop + 1 < size) {
-                    Pair<Configuration, Configuration> parents = selectTwo(fitnesses);
-                    Pair<Configuration, Configuration> children = crossover(parents.first, parents.second);
-                    newPop[numNewPop] = children.first.toArray();
+
+                    Configuration parent1 = new Configuration(getRandomElementInList(fitnesses).entity);
+                    Configuration parent2 = new Configuration(getRandomElementInList(fitnesses).entity);
+
+                    Configuration child1 = crossover(parent1, parent2);
+                    Configuration child2 = crossover(parent1, parent2);
+
+                    newPop[numNewPop] = child1.toArray();
                     numNewPop++;
-                    newPop[numNewPop] = children.second.toArray();
+                    newPop[numNewPop] = child2.toArray();
                     numNewPop++;
                 } else {
-                    double[] ent = mutateOrNot(mutateProb, growthSpeed, selectOne(fitnesses));
+                    Fitness randomElementInList = getRandomElementInList(fitnesses);
+                    double[] ent = mutate(new Configuration(randomElementInList.entity)).toArray();
                     newPop[numNewPop] = ent;
                     numNewPop++;
                 }
@@ -104,50 +122,22 @@ public class Evolution {
         return initialSeed;
     }
 
-    private double randomDoubleInRange(double min, double max) {
-        return random.nextDouble() * (max - min) + min;
-    }
+    /**
+     * Create a child with each of the attributes randomly being chosen from the mother or father with no mutations
+     * @param mother The configuration from one of the parents
+     * @param father Configuration of the other parent
+     * @return The child configuration
+     */
+    private Configuration crossover(Configuration mother, Configuration father) {
+        Configuration child = new Configuration();
 
-    private double[] mutate(double[] growthSpeed, Fitness fitness) {
-        double[] result = new double[fitness.entity.length];
-        for (int i = 0; i < fitness.entity.length; i++) {
-            double temp = 10000 / fitness.score;
-            double change = (random.nextDouble() * (growthSpeed[i] * 2.0) - growthSpeed[i]) * temp;
-            result[i] = fitness.entity[i] + change;
-        }
-        return result;
-    }
+        child.setX(random.nextBoolean() ? mother.getX() : father.getX());
+        child.setY(random.nextBoolean() ? mother.getY() : father.getY());
+        child.setWidth(random.nextBoolean() ? mother.getWidth() : father.getWidth());
+        child.setHeight(random.nextBoolean() ? mother.getHeight() : father.getHeight());
+        child.setVelocity(random.nextBoolean() ? mother.getVelocity() : father.getVelocity());
 
-    private Pair<Configuration, Configuration> crossover(Configuration mother, Configuration father) {
-        return crossover(mother.toArray(), father.toArray());
-    }
-
-    private Pair<Configuration, Configuration> crossover(double[] mother, double[] father) {
-        int numGenes = mother.length;
-
-        double[] son = new double[numGenes];
-        double[] daughter = new double[numGenes];
-        int leftSlice = (int) (random.nextDouble() * numGenes);
-        int rightSlice = (int) (random.nextDouble() * numGenes);
-
-        if (leftSlice > rightSlice) {
-            int tmp = rightSlice;
-            rightSlice = leftSlice;
-            leftSlice = tmp;
-        }
-        for (int i = 0; i < leftSlice; i++) {
-            son[i] = father[i];
-            daughter[i] = mother[i];
-        }
-        for (int i = leftSlice; i < rightSlice; i++) {
-            son[i] = mother[i];
-            daughter[i] = father[i];
-        }
-        for (int i = rightSlice; i < numGenes; i++) {
-            son[i] = father[i];
-            daughter[i] = mother[i];
-        }
-        return new Pair<>(new Configuration(son), new Configuration(daughter));
+        return child;
     }
 
     private Void fitness(Configuration entity, ArrayList<Fitness> fitnesses) {
@@ -173,25 +163,24 @@ public class Evolution {
         return minScore < stopScore;
     }
 
-    private double[] mutateOrNot(double probability, double[] growthSpeed, Fitness fitness) {
-        if (random.nextDouble() < probability) {
-            return mutate(growthSpeed, fitness);
+    private Configuration mutate(Configuration configuration) {
+        if (Math.random() < mutateProb) {
+            configuration.setX(randomDoubleInRange(mins.getX(), maxes.getX()));
         }
-        return fitness.entity;
-    }
-
-    private Fitness selectOne(ArrayList<Fitness> fitnesses) {
-        double n = (double) fitnesses.size();
-        Fitness a = fitnesses.get((int) (random.nextDouble() * n));
-        Fitness b = fitnesses.get((int) (random.nextDouble() * n));
-        if (a.score - b.score > 0) {
-            return a;
+        if (Math.random() < mutateProb) {
+            configuration.setY(randomDoubleInRange(mins.getY(), maxes.getY()));
         }
-        return b;
-    }
+        if (Math.random() < mutateProb) {
+            configuration.setWidth(randomDoubleInRange(mins.getWidth(), maxes.getWidth()));
+        }
+        if (Math.random() < mutateProb) {
+            configuration.setHeight(randomDoubleInRange(mins.getHeight(), maxes.getHeight()));
+        }
+        if (Math.random() < mutateProb) {
+            configuration.setVelocity(randomDoubleInRange(mins.getVelocity(), maxes.getVelocity()));
+        }
 
-    private Pair<Configuration, Configuration> selectTwo(ArrayList<Fitness> fitnesses) {
-        return new Pair<>(new Configuration(selectOne(fitnesses).entity), new Configuration(selectOne(fitnesses).entity));
+        return configuration;
     }
 
     public String entityToQueryParams(Configuration entity) {
