@@ -53,3 +53,12 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+dinoJava//path/chromedriver\.log
+
+*.class
+
+*.log
+
+dinoJava/\.idea/uiDesigner\.xml
+
+dinoJava/\.idea/workspace\.xml
