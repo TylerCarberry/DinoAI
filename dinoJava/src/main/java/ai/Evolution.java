@@ -3,6 +3,7 @@ package ai;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,8 @@ public class Evolution {
     private double mutateProb;
     private Individual mins;
     private Individual maxes;
+
+    private int windowPosition = 0;
 
     public Evolution(int numThreads) {
         Logger logger = Logger.getLogger("");
@@ -141,7 +144,13 @@ public class Evolution {
     private Void calculateFitness(Individual individual) {
         String params = entityToQueryParams(individual);
         // this is where the game is played
-        WebDriver driver = new ChromeDriver();
+
+        windowPosition = (windowPosition + 200) % 800;
+
+        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.addArguments("--window-size=800,500", "--window-position="+windowPosition+",0");
+
+        WebDriver driver = new ChromeDriver(chromeOptions);
         driver.get("file:///Users/Tyler/DinoAI/index.html?" + params);
 
         // Wait until the game has completed
