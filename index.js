@@ -188,7 +188,7 @@ function getParameterByName(name, url) {
     var FPS = 60;
 
     /** @const */
-    var IS_HIDPI = window.devicePixelRatio > 1;
+    var IS_HIDPI = false; //window.devicePixelRatio > 1;
 
     /** @const */
     var IS_IOS = /iPad|iPhone|iPod/.test(window.navigator.platform);
@@ -923,7 +923,7 @@ function getParameterByName(name, url) {
             //     "&c=" + getParameterByName("c") + "&d=" + getParameterByName("d") + "&e=" + getParameterByName("e");
             //window.opener.callback(this.highestScore, params);
             document.getElementById("game-over").innerHTML = "game over";
-            document.getElementById("score").innerHTML = this.highestScore.toString();
+            document.getElementById("score").innerHTML = Math.floor(this.highestScore * 0.025);
             //window.close();
 
             //this.restart();
