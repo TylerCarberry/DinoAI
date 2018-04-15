@@ -16,6 +16,10 @@
                     <source>8</source>
                     <target>8</target>
                 </configuration>
+                <individual>
+                    <source>8</source>
+                    <target>8</target>
+                </individual>
             </plugin>
         </plugins>
     </build>

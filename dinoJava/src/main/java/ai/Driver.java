@@ -6,8 +6,8 @@ public class Driver {
 
         int size = 25;
 
-        Configuration max = new Configuration(400, 400, 700, 700, 2);
-        Configuration min = new Configuration(0, 0, 0, 0, 0);
+        Individual max = new Individual(400, 400, 700, 700, 2);
+        Individual min = new Individual(0, 0, 0, 0, 0);
 
         int iterations = 3000;
         int stopScore = 1_000_000;

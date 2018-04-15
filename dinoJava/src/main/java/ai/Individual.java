@@ -2,14 +2,15 @@ package ai;
 
 import java.util.Objects;
 
-public class Configuration {
+public class Individual {
 
     private double x, y, width, height, velocity;
+    private double fitness;
 
-    public Configuration() {
+    public Individual() {
     }
 
-    public Configuration(double x, double y, double width, double height, double velocity) {
+    public Individual(double x, double y, double width, double height, double velocity) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -17,7 +18,7 @@ public class Configuration {
         this.velocity = velocity;
     }
 
-    public Configuration(double[] attributes) {
+    public Individual(double[] attributes) {
         this.x = attributes[0];
         this.y = attributes[1];
         this.width = attributes[2];
@@ -70,31 +71,43 @@ public class Configuration {
         this.velocity = velocity;
     }
 
+    public double getFitness() {
+        return fitness;
+    }
+
+    public Individual setFitness(double fitness) {
+        this.fitness = fitness;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Configuration that = (Configuration) o;
+        Individual that = (Individual) o;
         return Double.compare(that.x, x) == 0 &&
                 Double.compare(that.y, y) == 0 &&
                 Double.compare(that.width, width) == 0 &&
                 Double.compare(that.height, height) == 0 &&
-                Double.compare(that.velocity, velocity) == 0;
+                Double.compare(that.velocity, velocity) == 0 &&
+                Double.compare(that.fitness, fitness) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, width, height, velocity);
+
+        return Objects.hash(x, y, width, height, velocity, fitness);
     }
 
     @Override
     public String toString() {
-        return "Configuration{" +
+        return "Individual{" +
                 "x=" + x +
                 ", y=" + y +
                 ", width=" + width +
                 ", height=" + height +
                 ", velocity=" + velocity +
+                ", fitness=" + fitness +
                 '}';
     }
 }
