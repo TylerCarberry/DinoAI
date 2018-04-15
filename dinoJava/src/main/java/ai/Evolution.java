@@ -5,7 +5,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -25,12 +24,65 @@ public class Evolution {
         exec = Executors.newFixedThreadPool(numThreads);
     }
 
-    private void configureChromeWebDriver() {
-        System.setProperty("webdriver.chrome.logfile", "\\path\\chromedriver.log");
-        System.setProperty("webdriver.chrome.driver", "\\path\\chromedriver.exe");
-        System.setProperty("webdriver.chrome.args", "--disable-logging");
-        System.setProperty("webdriver.chrome.silentOutput", "true");
-        System.setProperty("webdriver.chrome.driver", "/usr/local/Cellar/chromedriver/2.37/bin/chromedriver");
+    public void start(double[] growthSpeed, double mutateProb, Configuration maxes, Configuration mins, int size,
+                      int iterations, int stopScore, double crossoverProb) {
+        double[][] entities = new double[size][];
+
+        for (int i = 0; i < size; i++) {
+            entities[i] = seed(maxes, mins).toArray();
+        }
+
+        for (int i = 0; i < iterations; i++) {
+            // get the fitness score for each entity
+            ArrayList<Fitness> fitnesses = new ArrayList<>();
+
+            ArrayList<Callable<Void>> tasks = new ArrayList<>();
+            for (int j = 0; j < size; j++) {
+                double[] entity = entities[j];
+                tasks.add(() -> fitness(new Configuration(entity), fitnesses));
+            }
+            try {
+                exec.invokeAll(tasks);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // sort the entities by fitness score
+            fitnesses.sort((fitness1, fitness2) -> fitness2.score - fitness1.score);
+            int minScore = fitnesses.get(size - 1).score;
+
+            if (!generation(stopScore, minScore))
+                break;
+
+            double[][] newPop = new double[size][];
+
+            // add best one to new population
+            newPop[0] = fitnesses.get(0).entity;
+            int numNewPop = 1;
+
+            while (numNewPop < size) {
+                if (random.nextDouble() < crossoverProb && numNewPop + 1 < size) {
+                    Pair<Configuration, Configuration> parents = selectTwo(fitnesses);
+                    Pair<Configuration, Configuration> children = crossover(parents.first, parents.second);
+                    newPop[numNewPop] = children.first.toArray();
+                    numNewPop++;
+                    newPop[numNewPop] = children.second.toArray();
+                    numNewPop++;
+                } else {
+                    double[] ent = mutateOrNot(mutateProb, growthSpeed, selectOne(fitnesses));
+                    newPop[numNewPop] = ent;
+                    numNewPop++;
+                }
+            }
+
+            for (int j = 0; j < size; j++) {
+                double[] entity = fitnesses.get(j).entity;
+                String params = entityToQueryParams(new Configuration(entity)) +
+                        " " + fitnesses.get(j).score;
+                //System.out.println(params);
+            }
+            //System.out.println(fitnesses.get(0).score);
+            entities = newPop;
+        }
     }
 
     /**
@@ -64,6 +116,10 @@ public class Evolution {
             result[i] = fitness.entity[i] + change;
         }
         return result;
+    }
+
+    private Pair<Configuration, Configuration> crossover(Configuration mother, Configuration father) {
+        return crossover(mother.toArray(), father.toArray());
     }
 
     private Pair<Configuration, Configuration> crossover(double[] mother, double[] father) {
@@ -138,77 +194,6 @@ public class Evolution {
         return new Pair<>(new Configuration(selectOne(fitnesses).entity), new Configuration(selectOne(fitnesses).entity));
     }
 
-    public void start(double[] growthSpeed, double mutateProb, Configuration maxes, Configuration mins, int size,
-                      int iterations, int stopScore, double crossoverProb) {
-        double[][] entities = new double[size][];
-
-        for (int i = 0; i < size; i++) {
-            entities[i] = seed(maxes, mins).toArray();
-        }
-
-        for (int i = 0; i < iterations; i++) {
-            // get the fitness score for each entity
-            ArrayList<Fitness> fitnesses = new ArrayList<Fitness>();
-
-            ArrayList<Callable<Void>> tasks = new ArrayList<Callable<Void>>();
-            for (int j = 0; j < size; j++) {
-                double[] entity = entities[j];
-                tasks.add(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        return fitness(new Configuration(entity), fitnesses);
-                    }
-                });
-            }
-            try {
-                exec.invokeAll(tasks);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            // sort the entities by fitness score
-            fitnesses.sort(new Comparator<Fitness>() {
-                @Override
-                public int compare(Fitness fitness1, Fitness fitness2) {
-                    return fitness2.score - fitness1.score;
-                }
-            });
-            int minScore = fitnesses.get(size - 1).score;
-
-            if (!generation(stopScore, minScore))
-                break;
-
-            double[][] newPop = new double[size][];
-
-            // add best one to new population
-            newPop[0] = fitnesses.get(0).entity;
-            int numNewPop = 1;
-
-            while (numNewPop < size) {
-                if (random.nextDouble() < crossoverProb && numNewPop + 1 < size) {
-                    Pair<Configuration, Configuration> parents = selectTwo(fitnesses);
-                    Pair<Configuration, Configuration> children = crossover(parents.first.toArray(), parents.second.toArray());
-                    newPop[numNewPop] = children.first.toArray();
-                    numNewPop++;
-                    newPop[numNewPop] = children.second.toArray();
-                    numNewPop++;
-                } else {
-                    double[] ent = mutateOrNot(mutateProb, growthSpeed, selectOne(fitnesses));
-                    newPop[numNewPop] = ent;
-                    numNewPop++;
-                }
-            }
-
-            for (int j = 0; j < size; j++) {
-                double[] entity = fitnesses.get(j).entity;
-                String params = entityToQueryParams(new Configuration(entity)) +
-                        " " + fitnesses.get(j).score;
-                //System.out.println(params);
-            }
-            //System.out.println(fitnesses.get(0).score);
-            entities = newPop;
-        }
-    }
-
     public String entityToQueryParams(Configuration entity) {
         String result = "x=" + entity.getX() +
                 "&y=" + entity.getY() +
@@ -216,5 +201,13 @@ public class Evolution {
                 "&h=" + entity.getHeight() +
                 "&v=" + entity.getVelocity();
         return result;
+    }
+
+    private void configureChromeWebDriver() {
+        System.setProperty("webdriver.chrome.logfile", "\\path\\chromedriver.log");
+        System.setProperty("webdriver.chrome.driver", "\\path\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.args", "--disable-logging");
+        System.setProperty("webdriver.chrome.silentOutput", "true");
+        System.setProperty("webdriver.chrome.driver", "/usr/local/Cellar/chromedriver/2.37/bin/chromedriver");
     }
 }
