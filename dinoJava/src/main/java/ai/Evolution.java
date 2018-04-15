@@ -66,7 +66,7 @@ public class Evolution {
         return result;
     }
 
-    private Children crossover(double[] mother, double[] father) {
+    private Pair<Configuration, Configuration> crossover(double[] mother, double[] father) {
         int numGenes = mother.length;
 
         double[] son = new double[numGenes];
@@ -91,7 +91,7 @@ public class Evolution {
             son[i] = father[i];
             daughter[i] = mother[i];
         }
-        return new Children(son, daughter);
+        return new Pair<>(new Configuration(son), new Configuration(daughter));
     }
 
     private Void fitness(Configuration entity, ArrayList<Fitness> fitnesses) {
@@ -134,8 +134,8 @@ public class Evolution {
         return b;
     }
 
-    private Parents selectTwo(ArrayList<Fitness> fitnesses) {
-        return new Parents(selectOne(fitnesses).entity, selectOne(fitnesses).entity);
+    private Pair<Configuration, Configuration> selectTwo(ArrayList<Fitness> fitnesses) {
+        return new Pair<>(new Configuration(selectOne(fitnesses).entity), new Configuration(selectOne(fitnesses).entity));
     }
 
     public void start(double[] growthSpeed, double mutateProb, Configuration maxes, Configuration mins, int size,
@@ -185,11 +185,11 @@ public class Evolution {
 
             while (numNewPop < size) {
                 if (random.nextDouble() < crossoverProb && numNewPop + 1 < size) {
-                    Parents parents = selectTwo(fitnesses);
-                    Children children = crossover(parents.mother, parents.father);
-                    newPop[numNewPop] = children.daughter;
+                    Pair<Configuration, Configuration> parents = selectTwo(fitnesses);
+                    Pair<Configuration, Configuration> children = crossover(parents.first.toArray(), parents.second.toArray());
+                    newPop[numNewPop] = children.first.toArray();
                     numNewPop++;
-                    newPop[numNewPop] = children.son;
+                    newPop[numNewPop] = children.second.toArray();
                     numNewPop++;
                 } else {
                     double[] ent = mutateOrNot(mutateProb, growthSpeed, selectOne(fitnesses));
