@@ -43,7 +43,7 @@ public class Evolution {
             population.add(seed(maxes, mins));
         }
 
-        System.out.println("n \t Min \t Q1 \t Mean \t Med \t Q3 \t Max");
+        System.out.println("n\tMin \tQ1  \tMean\tMed  \tQ3  \tMax");
         for (int iteration = 0; iteration < iterations; iteration++) {
 
             ArrayList<Callable<Void>> tasks = new ArrayList<>();
@@ -76,17 +76,19 @@ public class Evolution {
                 newPopulation.add(population.get(i));
             }
 
+            List<Individual> bestIndividuals = population.subList(0, (int) (population.size() * 0.25));
+
             while (newPopulation.size() < populationSize) {
 
                 Individual individual;
 
                 if (random.nextDouble() < crossoverProb) {
-                    Individual parent1 = getRandomElementInList(population);
-                    Individual parent2 = getRandomElementInList(population);
+                    Individual parent1 = getRandomElementInList(bestIndividuals);
+                    Individual parent2 = getRandomElementInList(bestIndividuals);
                     assert parent1 != null && parent2 != null;
                     individual = crossover(parent1, parent2);
                 } else {
-                    individual = getRandomElementInList(population);
+                    individual = getRandomElementInList(bestIndividuals);
                 }
 
                 assert individual != null;
