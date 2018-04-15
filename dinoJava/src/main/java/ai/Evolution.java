@@ -32,75 +32,70 @@ public class Evolution {
         exec = Executors.newFixedThreadPool(numThreads);
     }
 
-    public void start(double mutateProb, Individual maxes, Individual mins, int size,
-                      int iterations, int stopScore, double crossoverProb) {
+    public void start(int populationSize, int iterations, double crossoverProb, double mutateProb, Individual maxes, Individual mins) {
 
         this.mutateProb = mutateProb;
         this.mins = mins;
         this.maxes = maxes;
 
-        double[][] entities = new double[size][];
-
-        for (int i = 0; i < size; i++) {
-            entities[i] = seed(maxes, mins).toArray();
+        List<Individual> population = new ArrayList<>();
+        for (int i = 0; i < populationSize; i++) {
+            population.add(seed(maxes, mins));
         }
 
-        for (int i = 0; i < iterations; i++) {
-            // get the fitness score for each entity
-            ArrayList<Individual> fitnesses = new ArrayList<>();
+        System.out.println("n \t Min \t Q1 \t Mean \t Med \t Q3 \t Max");
+        for (int iteration = 0; iteration < iterations; iteration++) {
 
             ArrayList<Callable<Void>> tasks = new ArrayList<>();
-            for (int j = 0; j < size; j++) {
-                double[] entity = entities[j];
-                tasks.add(() -> fitness(new Individual(entity), fitnesses));
+            for (Individual individual : population) {
+                tasks.add(() -> calculateFitness(individual));
             }
+
             try {
                 exec.invokeAll(tasks);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            // sort the entities by fitness score
-            fitnesses.sort((fitness1, fitness2) -> (int) (fitness2.getFitness() - fitness1.getFitness()));
-            double minScore = fitnesses.get(size - 1).getFitness();
 
-            if (!generation(stopScore, minScore))
-                break;
+            // sort the entities by calculateFitness score
+            population.sort((individual1, individual2) -> (int) (individual2.getFitness() - individual1.getFitness()));
 
-            double[][] newPop = new double[size][];
+            double mean = population.parallelStream().mapToDouble(Individual::getFitness).sum() / population.size();
+            double median = population.get((int) (population.size() * 0.5)).getFitness();
+            double q1 = population.get((int) (population.size() * 0.75)).getFitness();
+            double q3 = population.get((int) (population.size() * 0.25)).getFitness();
+            double min = population.get(population.size() - 1).getFitness();
+            double max = population.get(0).getFitness();
 
-            // add best one to new population
-            newPop[0] = fitnesses.get(0).toArray();
-            int numNewPop = 1;
+            System.out.println(iteration + "\t" + min + "\t" + q1 + "\t" + mean + "\t" + median + "\t" + q3 + "\t" + max);
 
-            while (numNewPop < size) {
-                if (random.nextDouble() < crossoverProb && numNewPop + 1 < size) {
+            List<Individual> newPopulation = new ArrayList<>();
 
-                    Individual parent1 = getRandomElementInList(fitnesses);
-                    Individual parent2 = getRandomElementInList(fitnesses);
+            // Copy the best 25% over directly, with no crossover or mutations
+            for (int i = 0; i < populationSize * 0.25; i ++) {
+                newPopulation.add(population.get(i));
+            }
 
-                    Individual child1 = crossover(parent1, parent2);
-                    Individual child2 = crossover(parent1, parent2);
+            while (newPopulation.size() < populationSize) {
 
-                    newPop[numNewPop] = child1.toArray();
-                    numNewPop++;
-                    newPop[numNewPop] = child2.toArray();
-                    numNewPop++;
+                Individual individual;
+
+                if (random.nextDouble() < crossoverProb) {
+                    Individual parent1 = getRandomElementInList(population);
+                    Individual parent2 = getRandomElementInList(population);
+                    assert parent1 != null && parent2 != null;
+                    individual = crossover(parent1, parent2);
                 } else {
-                    Individual randomElementInList = getRandomElementInList(fitnesses);
-                    double[] ent = mutate(randomElementInList).toArray();
-                    newPop[numNewPop] = ent;
-                    numNewPop++;
+                    individual = getRandomElementInList(population);
                 }
+
+                assert individual != null;
+                individual.setFitness(0);
+                individual = potentiallyMutate(individual);
+                newPopulation.add(individual);
             }
 
-            for (int j = 0; j < size; j++) {
-                double[] entity = fitnesses.get(j).toArray();
-                String params = entityToQueryParams(new Individual(entity)) +
-                        " " + fitnesses.get(j).getFitness();
-                //System.out.println(params);
-            }
-            //System.out.println(fitnesses.get(0).score);
-            entities = newPop;
+            population = newPopulation;
         }
     }
 
@@ -132,20 +127,22 @@ public class Evolution {
     private Individual crossover(Individual mother, Individual father) {
         Individual child = new Individual();
 
-        child.setX(random.nextBoolean() ? mother.getX() : father.getX());
-        child.setY(random.nextBoolean() ? mother.getY() : father.getY());
-        child.setWidth(random.nextBoolean() ? mother.getWidth() : father.getWidth());
-        child.setHeight(random.nextBoolean() ? mother.getHeight() : father.getHeight());
-        child.setVelocity(random.nextBoolean() ? mother.getVelocity() : father.getVelocity());
+        child.setX(randomDoubleInRange(mother.getX(), father.getX()));
+        child.setY(randomDoubleInRange(mother.getY(), father.getY()));
+        child.setWidth(randomDoubleInRange(mother.getWidth(), father.getWidth()));
+        child.setHeight(randomDoubleInRange(mother.getHeight(), father.getHeight()));
+        child.setVelocity(randomDoubleInRange(mother.getVelocity(), father.getVelocity()));
 
         return child;
     }
 
-    private Void fitness(Individual entity, List<Individual> fitnesses) {
-        String params = entityToQueryParams(entity);
+    private Void calculateFitness(Individual individual) {
+        String params = entityToQueryParams(individual);
         // this is where the game is played
         WebDriver driver = new ChromeDriver();
         driver.get("file:///Users/Tyler/DinoAI/index.html?" + params);
+
+        // Wait until the game has completed
         while (!driver.findElement(By.id("game-over")).getText().equals("game over")) {
             try {
                 Thread.sleep(1000);
@@ -153,32 +150,38 @@ public class Evolution {
                 e.printStackTrace();
             }
         }
+        // Read the final score from a textbox on the screen
         int score = Integer.parseInt(driver.findElement(By.id("score")).getText());
-        System.out.println(score);
+        //System.out.println(score);
         driver.quit();
-        Individual individual = new Individual(entity.toArray()).setFitness(score);
-        fitnesses.add(individual);
+
+        individual.setFitness(score);
+
         return null;
     }
 
-    private boolean generation(double stopScore, double minScore) {
-        return minScore < stopScore;
-    }
+    /**
+     * Randomly mutate the attributes of the individual
+     * @param individual The individual to change the attributes of
+     * @return The individual with 0 or more of its attributes changed
+     */
+    private Individual potentiallyMutate(Individual individual) {
+        // Since there are different attributes that could be mutated, divide the overall likelihood
+        double probability = mutateProb / 5;
 
-    private Individual mutate(Individual individual) {
-        if (Math.random() < mutateProb) {
+        if (Math.random() < probability) {
             individual.setX(randomDoubleInRange(mins.getX(), maxes.getX()));
         }
-        if (Math.random() < mutateProb) {
+        if (Math.random() < probability) {
             individual.setY(randomDoubleInRange(mins.getY(), maxes.getY()));
         }
-        if (Math.random() < mutateProb) {
+        if (Math.random() < probability) {
             individual.setWidth(randomDoubleInRange(mins.getWidth(), maxes.getWidth()));
         }
-        if (Math.random() < mutateProb) {
+        if (Math.random() < probability) {
             individual.setHeight(randomDoubleInRange(mins.getHeight(), maxes.getHeight()));
         }
-        if (Math.random() < mutateProb) {
+        if (Math.random() < probability) {
             individual.setVelocity(randomDoubleInRange(mins.getVelocity(), maxes.getVelocity()));
         }
 

@@ -18,19 +18,6 @@ public class Individual {
         this.velocity = velocity;
     }
 
-    public Individual(double[] attributes) {
-        this.x = attributes[0];
-        this.y = attributes[1];
-        this.width = attributes[2];
-        this.height = attributes[3];
-        this.velocity = attributes[4];
-
-    }
-
-    public double[] toArray() {
-        return new double[]{x, y, width, height, velocity};
-    }
-
     public double getX() {
         return x;
     }
