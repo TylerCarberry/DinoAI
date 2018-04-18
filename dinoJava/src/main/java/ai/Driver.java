@@ -4,15 +4,15 @@ public class Driver {
 
     public static void main(String[] args) {
 
-        // Each attribute of the individuals will always been in this range.
-        // Ensure that these value are set wide enough apart
+        // Each attribute of the individuals will always be in this range.
+        // Ensure that these value are set wide enough apart to contain the ideal solution
         Individual maxValues = new Individual(400, 400, 700, 700, 20);
         Individual minValues = new Individual(0, 0, 0, 0, 0);
 
         int populationSize = 25;
         int iterations = 1000;
         double crossoverProb = 0.8;
-        double mutateProb = 0.2;
+        double mutateProb = 0.3;
         int numWindowsAtOnce = 5;
 
         Evolution evolution = new Evolution(numWindowsAtOnce);

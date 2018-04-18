@@ -5,6 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -14,8 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static ai.Utils.getRandomElementInList;
-import static ai.Utils.randomDoubleInRange;
+import static ai.Utils.*;
 
 public class Evolution {
 
@@ -25,6 +25,8 @@ public class Evolution {
     private double mutateProb;
     private Individual mins;
     private Individual maxes;
+
+    private double bestScore = 0;
 
     private int windowPosition = 0;
 
@@ -41,9 +43,12 @@ public class Evolution {
         this.mins = mins;
         this.maxes = maxes;
 
-        List<Individual> population = new ArrayList<>();
-        for (int i = 0; i < populationSize; i++) {
-            population.add(seed(maxes, mins));
+        List<Individual> population = getPopulationFromFile();
+
+        if (population.isEmpty()) {
+            for (int i = 0; i < populationSize; i++) {
+                population.add(seed(maxes, mins));
+            }
         }
 
         System.out.println("n\tMin \tQ1  \tMean\tMed  \tQ3  \tMax");
@@ -68,18 +73,18 @@ public class Evolution {
             double q1 = population.get((int) (population.size() * 0.75)).getFitness();
             double q3 = population.get((int) (population.size() * 0.25)).getFitness();
             double min = population.get(population.size() - 1).getFitness();
-            double max = population.get(0).getFitness();
+            bestScore = population.get(0).getFitness();
 
-            System.out.println(iteration + "\t" + min + "\t" + q1 + "\t" + mean + "\t" + median + "\t" + q3 + "\t" + max);
+            System.out.println(iteration + "\t" + min + "\t" + q1 + "\t" + mean + "\t" + median + "\t" + q3 + "\t" + bestScore);
 
             List<Individual> newPopulation = new ArrayList<>();
 
-            // Copy the best 25% over directly, with no crossover or mutations
-            for (int i = 0; i < populationSize * 0.25; i ++) {
+            // Copy the best individuals over directly, with no crossover or mutations
+            for (int i = 0; i < populationSize * 0.10; i ++) {
                 newPopulation.add(population.get(i));
             }
 
-            List<Individual> bestIndividuals = population.subList(0, (int) (population.size() * 0.25));
+            List<Individual> bestIndividuals = population.subList(0, (int) (population.size() * 0.5));
 
             while (newPopulation.size() < populationSize) {
 
@@ -95,12 +100,14 @@ public class Evolution {
                 }
 
                 assert individual != null;
-                individual.setFitness(0);
                 individual = potentiallyMutate(individual);
+
+                individual.setFitness(0);
                 newPopulation.add(individual);
             }
 
             population = newPopulation;
+            savePopulationToFile(population);
         }
     }
 
@@ -177,26 +184,37 @@ public class Evolution {
      * @return The individual with 0 or more of its attributes changed
      */
     private Individual potentiallyMutate(Individual individual) {
-        // Since there are different attributes that could be mutated, divide the overall likelihood
-        double probability = mutateProb / 5;
+        // Decrease the chance of mutations as the AI improves
+        double temperature = 1/Math.log(Math.max(bestScore, 10));
+
+        // Since there are 5 different variables, divide the overall chance to find the
+        // probability of an individual mutation
+        double probability = mutateProb * 0.20;
 
         if (Math.random() < probability) {
-            individual.setX(randomDoubleInRange(mins.getX(), maxes.getX()));
+            individual.setX(mutateWithTemperature(individual.getX(), maxes.getX(), mins.getX(), temperature));
         }
         if (Math.random() < probability) {
-            individual.setY(randomDoubleInRange(mins.getY(), maxes.getY()));
+            individual.setY(mutateWithTemperature(individual.getY(), maxes.getY(), mins.getY(), temperature));
         }
         if (Math.random() < probability) {
-            individual.setWidth(randomDoubleInRange(mins.getWidth(), maxes.getWidth()));
+            individual.setWidth(mutateWithTemperature(individual.getWidth(), maxes.getWidth(), mins.getWidth(), temperature));
         }
         if (Math.random() < probability) {
-            individual.setHeight(randomDoubleInRange(mins.getHeight(), maxes.getHeight()));
+            individual.setHeight(mutateWithTemperature(individual.getHeight(), maxes.getHeight(), mins.getHeight(), temperature));
         }
         if (Math.random() < probability) {
-            individual.setVelocity(randomDoubleInRange(mins.getVelocity(), maxes.getVelocity()));
+            individual.setVelocity(mutateWithTemperature(individual.getVelocity(), maxes.getVelocity(), mins.getVelocity(), temperature));
         }
 
         return individual;
+    }
+
+    private double mutateWithTemperature(double current, double max, double min, double temperature) {
+        double maximumChange = Math.min(current - min, max - current);
+        double possibleChange = maximumChange * temperature;
+
+        return randomDoubleNormalDistribution(current - possibleChange, current + possibleChange);
     }
 
     public String entityToQueryParams(Individual entity) {
@@ -214,5 +232,39 @@ public class Evolution {
         System.setProperty("webdriver.chrome.args", "--disable-logging");
         System.setProperty("webdriver.chrome.silentOutput", "true");
         System.setProperty("webdriver.chrome.driver", "/usr/local/Cellar/chromedriver/2.37/bin/chromedriver");
+    }
+
+    private void savePopulationToFile(List<Individual> population) {
+        try {
+            FileOutputStream f = new FileOutputStream(new File("storedPopulation.txt"));
+            ObjectOutputStream o = new ObjectOutputStream(f);
+
+            // Write objects to file
+            o.writeObject(population);
+
+            o.close();
+            f.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private List<Individual> getPopulationFromFile() {
+        List<Individual> population = new ArrayList<>();
+        try {
+            FileInputStream fi = new FileInputStream(new File("storedPopulation.txt"));
+
+            ObjectInputStream oi = new ObjectInputStream(fi);
+
+            // Read objects
+            population = (List<Individual>) oi.readObject();
+
+            oi.close();
+            fi.close();
+        } catch (IOException | ClassNotFoundException e) {
+            // No previous population found
+        }
+
+        return population;
     }
 }

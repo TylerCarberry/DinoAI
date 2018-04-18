@@ -1,8 +1,9 @@
 package ai;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Individual {
+public class Individual implements Serializable {
 
     private double x, y, width, height, velocity;
     private double fitness;
@@ -97,4 +98,5 @@ public class Individual {
                 ", fitness=" + fitness +
                 '}';
     }
+
 }
