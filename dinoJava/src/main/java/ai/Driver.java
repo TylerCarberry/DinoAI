@@ -1,5 +1,10 @@
 package ai;
 
+/**
+ * Grad AI
+ * Chrome Dinosaur Game
+ * @author Cole Robertson and Tyler Carberry
+ */
 public class Driver {
 
     public static void main(String[] args) {
@@ -9,17 +14,22 @@ public class Driver {
         Individual maxValues = new Individual(400, 400, 700, 700, 20);
         Individual minValues = new Individual(0, 0, 0, 0, 0);
 
+        // Number of individuals in each population
         int populationSize = 25;
+        // How long to run for
         int iterations = 1000;
+        // The likelihood that 2 individuals will breed
         double crossoverProb = 0.8;
+        // Likelihood of a mutation occurring
         double mutateProb = 0.3;
+        // Used to speed up the training process by running multiple instances at once
+        // Setting this value too high will cause your computer to lag and will cause the AI to randomly fail
         int numWindowsAtOnce = 5;
+        // If true, resume the training with the last generation. If false, start the training from scratch
+        boolean resumeTraining = true;
 
         Evolution evolution = new Evolution(numWindowsAtOnce);
-        evolution.start(populationSize, iterations, crossoverProb, mutateProb, maxValues, minValues);
-
-        // Best I have found so far letting it run
-        //file:///Users/ctr/DinoAI/index.html?x=115.74168058318503&y=133.12269758628344&w=111.86195667466018&h=138.81277715347295&v=0.26803062540966427
+        evolution.start(populationSize, iterations, crossoverProb, mutateProb, maxValues, minValues, resumeTraining);
 
         // Ensures all the Chrome tabs are closed out
         System.exit(0);

@@ -1,6 +1,8 @@
-// Copyright (c) 2014 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Cole Robertson and Tyler Carberry
+// Grad AI
+// Chrome Dinosaur Game
+
+// Return whether any obstacles are inside the bounding box
 function inBox(center_x, center_y, width, height, obstacles) {
     let half_height = Number(height) / 2.0;
     let half_width = Number(width) / 2.0;
@@ -21,6 +23,8 @@ function inBox(center_x, center_y, width, height, obstacles) {
     return false;
 }
 
+// Return whether the dinosaur should jump given the current game speed
+// and list of upcoming obstacles
 function shouldJump(currentSpeed, obstacles) {
     if (obstacles == null || obstacles[0] == null) {
         return false;
@@ -31,57 +35,18 @@ function shouldJump(currentSpeed, obstacles) {
 
     console.log(closestX, closestY);
 
+	// Get the variables from the query parameters
     let center_x = getParameterByName("x");
     let center_y = getParameterByName("y");
     let width = getParameterByName("w");
     let height = getParameterByName("h");
     let speed_adjust = getParameterByName("v");
+    
     console.log("center x: " + typeof center_x);
-    center_x = ((Number(speed_adjust) * Number(currentSpeed)) + Number(center_x)).toString();
+    center_x = ((Number(speed_adjust)*Number(currentSpeed))
+    		+Number(center_x)).toString();
     console.log("center x: " + typeof center_x);
-    //console.log("" + A + B + C + D + E);
-
-    //let foo = E * currentSpeed * closestX;
-
-    //console.log(foo)
-
-    ////////////*********************
-    // http://localhost:63342/DinoAI/index.html?_ijt=ellenqd8nn1u3udmt162comjm2?A=0&B=60&C=3&D=150&E=0.13
-
-    return inBox(center_x, center_y, width, height, obstacles);
-
-    //return Math.random() < 0.05;
-}
-
-
-function shouldDuck(currentSpeed, obstacles) {
-    if (obstacles == null || obstacles[0] == null) {
-        return false;
-    }
-
-    // closestX = obstacles[0].xPos;
-    // closestY = obstacles[0].yPos;
-    //
-    // console.log(closestX, closestY);
-    //
-    // const A = getParameterByName("a");
-    // const B = getParameterByName("b");
-    // const C = getParameterByName("c");
-    // const D = getParameterByName("d");
-    // const E = getParameterByName("e");
-    //
-    // if (closestY > A && closestY < B) {
-    //     return true;
-    // }
-
-    let center_x = getParameterByName("upper_x");
-    let center_y = getParameterByName("upper_y");
-    let width = getParameterByName("upper_w");
-    let height = getParameterByName("upper_h");
-    let speed_adjust = getParameterByName("upper_v");
-
-    center_x = ((Number(speed_adjust) * Number(currentSpeed)) + Number(center_x)).toString();
-
+    
     return inBox(center_x, center_y, width, height, obstacles);
 }
 
@@ -100,6 +65,13 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+
+// *************************************************************
+// All of the following code is from the original
+// Chrome Dinosaur Game, with no modifications made.
+// The full source code is available at
+// https://github.com/TylerCarberry/DinoAI
+// *************************************************************
 
 
 // extract from chromium source code by @liuwayong

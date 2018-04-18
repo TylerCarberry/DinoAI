@@ -17,6 +17,9 @@ import java.util.logging.Logger;
 
 import static ai.Utils.*;
 
+/**
+ * Runs the genetic algorithm on the Chrome Dinosaur Game
+ */
 public class Evolution {
 
     private Random random = new Random();
@@ -26,10 +29,16 @@ public class Evolution {
     private Individual mins;
     private Individual maxes;
 
+    // The current best score of the population
     private double bestScore = 0;
 
+    // Prevents overlapping of windows if multiple instances are running at once
     private int windowPosition = 0;
 
+    /**
+     * Create the genetic algorithm
+     * @param numThreads The number of instances to be tested at once
+     */
     public Evolution(int numThreads) {
         Logger logger = Logger.getLogger("");
         logger.setLevel(Level.OFF);
@@ -37,13 +46,28 @@ public class Evolution {
         exec = Executors.newFixedThreadPool(numThreads);
     }
 
-    public void start(int populationSize, int iterations, double crossoverProb, double mutateProb, Individual maxes, Individual mins) {
-
+    /**
+     * Start creating the genetic algorithm
+     * @param populationSize Number of individuals in each population
+     * @param iterations Number of populations to run before stopping
+     * @param crossoverProb Likelyhood of breeding to occur. Between 0 and 1
+     * @param mutateProb Likelihood of mutations to occur. Between 0 and 1
+     * @param maxes An individual with the highest value of fields as allowed by the game
+     * @param mins An individual with the lowest value of fields as allowed by the game
+     * @param resumeLastTraining If true, load the last population from a file
+     */
+    public void start(int populationSize, int iterations, double crossoverProb, double mutateProb,
+                      Individual maxes, Individual mins, boolean resumeLastTraining) {
         this.mutateProb = mutateProb;
         this.mins = mins;
         this.maxes = maxes;
 
-        List<Individual> population = getPopulationFromFile();
+        List<Individual> population;
+        if (resumeLastTraining) {
+            population = getPopulationFromFile();
+        } else {
+            population = new ArrayList<>();
+        }
 
         if (population.isEmpty()) {
             for (int i = 0; i < populationSize; i++) {
@@ -52,8 +76,10 @@ public class Evolution {
         }
 
         System.out.println("n\tMin \tQ1  \tMean\tMed  \tQ3  \tMax");
+
         for (int iteration = 0; iteration < iterations; iteration++) {
 
+            // Assign each individual to a different thread
             ArrayList<Callable<Void>> tasks = new ArrayList<>();
             for (Individual individual : population) {
                 tasks.add(() -> calculateFitness(individual));
@@ -65,18 +91,19 @@ public class Evolution {
                 e.printStackTrace();
             }
 
-            // sort the entities by calculateFitness score
+            // Sort the entities by their final score
             population.sort((individual1, individual2) -> (int) (individual2.getFitness() - individual1.getFitness()));
 
+            // Print the statistics to the console for debugging
             double mean = population.parallelStream().mapToDouble(Individual::getFitness).sum() / population.size();
             double median = population.get((int) (population.size() * 0.5)).getFitness();
             double q1 = population.get((int) (population.size() * 0.75)).getFitness();
             double q3 = population.get((int) (population.size() * 0.25)).getFitness();
             double min = population.get(population.size() - 1).getFitness();
             bestScore = population.get(0).getFitness();
-
             System.out.println(iteration + "\t" + min + "\t" + q1 + "\t" + mean + "\t" + median + "\t" + q3 + "\t" + bestScore);
 
+            // Perform variations on the population before creating the next generation
             List<Individual> newPopulation = new ArrayList<>();
 
             // Copy the best individuals over directly, with no crossover or mutations
@@ -84,12 +111,13 @@ public class Evolution {
                 newPopulation.add(population.get(i));
             }
 
+            // Only the top half of individuals are available to breed
             List<Individual> bestIndividuals = population.subList(0, (int) (population.size() * 0.5));
 
             while (newPopulation.size() < populationSize) {
-
                 Individual individual;
 
+                // Crossover
                 if (random.nextDouble() < crossoverProb) {
                     Individual parent1 = getRandomElementInList(bestIndividuals);
                     Individual parent2 = getRandomElementInList(bestIndividuals);
@@ -99,6 +127,7 @@ public class Evolution {
                     individual = getRandomElementInList(bestIndividuals);
                 }
 
+                // Mutations
                 assert individual != null;
                 individual = potentiallyMutate(individual);
 
@@ -148,12 +177,18 @@ public class Evolution {
         return child;
     }
 
+    /**
+     * Determine the fitness of an individual as calculated by the final score of the game
+     * This is where the game is played
+     * @param individual The individual to determine the fitness of
+     */
     private Void calculateFitness(Individual individual) {
         String params = entityToQueryParams(individual);
-        // this is where the game is played
 
+        // Move each window slightly to prevent overlapping
         windowPosition = (windowPosition + 200) % 800;
 
+        // Shrink the window slightly
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--window-size=800,500", "--window-position="+windowPosition+",0");
 
@@ -170,7 +205,6 @@ public class Evolution {
         }
         // Read the final score from a textbox on the screen
         int score = Integer.parseInt(driver.findElement(By.id("score")).getText());
-        //System.out.println(score);
         driver.quit();
 
         individual.setFitness(score);
@@ -210,6 +244,10 @@ public class Evolution {
         return individual;
     }
 
+    /**
+     * Perform a mutation where the amount of mutation is dependent on the current temperature of the game
+     * @return the mutated value
+     */
     private double mutateWithTemperature(double current, double max, double min, double temperature) {
         double maximumChange = Math.min(current - min, max - current);
         double possibleChange = maximumChange * temperature;

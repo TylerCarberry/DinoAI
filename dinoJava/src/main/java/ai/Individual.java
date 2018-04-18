@@ -3,9 +3,15 @@ package ai;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * An instance of the AI with different parameters that could be modified
+ */
 public class Individual implements Serializable {
 
+    // Parameters
     private double x, y, width, height, velocity;
+
+    // The final score of the game after running
     private double fitness;
 
     public Individual() {
