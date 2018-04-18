@@ -136,7 +136,10 @@ public class Evolution {
             }
 
             population = newPopulation;
-            savePopulationToFile(population);
+
+            if (!resumeLastTraining) {
+                savePopulationToFile(population);
+            }
         }
     }
 
