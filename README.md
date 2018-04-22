@@ -1,39 +1,19 @@
-## t-rex-runner
+# Dino AI
 
-the trex runner game extracted from chrome offline err page.
+A genetic algorithm that learns to solve the [Chrome Dinosaur Game](chrome://dino).
 
-see the [source](https://cs.chromium.org/chromium/src/components/neterror/resources/offline.js?q=t-rex+package:%5Echromium$&dr=C&l=7) from chromium
+Developed by [Tyler Carberry](https://github.com/tylercarberry) and [Cole Robertson](https://github.com/colerobertson) for our Graduate AI class.
 
-
-[go and enjoy! :smile: ](http://wayou.github.io/t-rex-runner/)
-
-![chrome offline game cast](assets/screenshot.gif)
-
-## Interesting Forks/In Chinese, we call it 「花样玩法」
-
-- [vianroyal](https://github.com/vianroyal)/[t-rex-runner](https://github.com/vianroyal/t-rex-runner) [Kumamon runner](http://vianroyal.github.io/t-rex-runner/) 
-<br>
-
-![](assets/kumamon-runner.gif)
-
-- [xkuga](https://github.com/xkuga)/[t-rex-runner](https://github.com/xkuga/t-rex-runner) [Hello KuGou](http://hellokugou.com/) 
-<br>
-
-![](assets/hello-kugou.gif)
-
-- [d-nery](https://github.com/d-nery/)/[t-rex-runner](https://github.com/d-nery/t-rex-runner) [Novas coisas](http://d-nery.github.io/t-rex-runner/) 
-<br>
-
-![](assets/novas-coisas.gif)
-
-- [chirag64](https://github.com/chirag64)/[t-rex-runner-bot](https://github.com/chirag64/t-rex-runner-bot) [t-rex runner bot](https://chirag64.github.io/t-rex-runner-bot/) 
-<br>
-
-![](assets/t-rex-runner-bot.gif)
-
-- [19janil](https://github.com/19janil)/[t-rex-runner](https://github.com/19janil/t-rex-runner) [t-rex runner](https://19janil.github.io/t-rex-runner/) 
-<br>
-
-![](assets/t-rex-runner-19janil.gif)
+![Demo](https://user-images.githubusercontent.com/6628497/39097331-e7dca934-4628-11e8-85bb-821dd2dbe0f4.gif)
 
 
+We modified the game to take input from query parameters. These parameters are created from the genetic algorithm and get refineded over time.
+
+• Survival: Every round the top 10% of the population gets passed down directly  
+• Crossover: The top 50% of the population breed and pass on a combination of their genes  
+• Mutations: There is a 30% chance that an individual has a mutation which slightly modifies one of its genes  
+
+## Usage
+Download Google Chrome if not already installed  
+Install chromedriver by running `brew install chromedriver`  
+Run `Driver.java`
