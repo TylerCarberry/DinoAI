@@ -7,7 +7,7 @@ Developed by [Tyler Carberry](https://github.com/tylercarberry) and [Cole Robert
 ![Demo](https://user-images.githubusercontent.com/6628497/39097331-e7dca934-4628-11e8-85bb-821dd2dbe0f4.gif)
 
 
-We modified the game to take input from query parameters. These parameters are created from the genetic algorithm and get refineded over time.
+We modified the game to take input from query parameters. These parameters are created from the genetic algorithm and get refined over time.
 
 • Survival: Every round the top 10% of the population gets passed down directly  
 • Crossover: The top 50% of the population breed and pass on a combination of their genes  
